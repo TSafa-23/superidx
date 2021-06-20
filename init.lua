@@ -37,7 +37,7 @@ function superi.rle(nodes)
 end
 
 --------------------------------------------------------------------------------------------------------------
--- pos1 and pos2 *must* be tables of x, y and z coordinates.
+
 function superi.save(pos1, pos2, name)
 
 	local nodenames = {}
@@ -109,11 +109,10 @@ function superi.load(pos, data)
 					i = i + 1
 				else
 
+					minetest.set_node({x = x + pos.x, y = y + pos.y, z = z + pos.z}, {name = data.nodenames[data.nodes[i][1]]})
 					if ti < data.nodes[i][2] then
 						ti = ti + 1
-						minetest.set_node({x = x + pos.x, y = y + pos.y, z = z + pos.z}, {name = data.nodenames[data.nodes[i][1]]})
 					else
-						minetest.set_node({x = x + pos.x, y = y + pos.y, z = z + pos.z}, {name = data.nodenames[data.nodes[i][1]]})
 						i = i + 1
 						ti = 1
 					end
