@@ -53,9 +53,9 @@ function superi.save(pos1, pos2, name)
 	local x = 0
 	local z = 0
 
-	while y ~= h do
-		while z ~= w do
-			while x ~= l do
+	while x ~= l do
+		while y ~= h do
+			while z ~= w do
 				tempnode = minetest.get_node({x = pos1.x + x, y = pos1.y + y, z = pos1.z + z})
 				for n = 1, #nodenames do
 					is_nodename = false
@@ -69,41 +69,40 @@ function superi.save(pos1, pos2, name)
 					table.insert(nodenames, tempnode.name)
 					table.insert(nodes, #nodenames)
 				end
-				x = superi.iterate_to(x, l)
+				z = superi.iterate_to(z, w)
 			end
-			x = 0
-			z = superi.iterate_to(z, w)
+			z = 0
+			y = superi.iterate_to(y, h)
 		end
-		z = 0
-		y = superi.iterate_to(y, h)
+		y = 0
+		x = superi.iterate_to(x, l)
 	end
 
 	superi.saved[name] = {l = l, w = w, h = h, nodenames = nodenames, nodes = superi.rle(nodes)}
 
 	minetest.mkdir(minetest.get_worldpath() .."/schems")
 	local file = io.open(minetest.get_worldpath() .."/schems/" ..name ..".sdx", "w+")
-	file:write(minetest.serialize(superi.saved[name]):gsub(" ", ""))
+	file:write((minetest.serialize(superi.saved[name]):gsub(" ", "")))
 	file:close()
 
 end
 
 -------------------------------------------------------------------------------------------------------------
 
-function superi.load(pos, name)
+function superi.load(pos, data)
 
 	local i = 1
 	local ti = 1
 	local x = 0
 	local y = 0
 	local z = 0
-	local data = superi.saved[name] or minetest.deserialize(io.open(minetest.get_worldpath() .."/schems/" ..name ..".sdx", "r"))
 	local pos2 = {x = pos.x + data.l, y = pos.y + data.h, z = pos.z + data.w}
 
 	minetest.emerge_area(pos, pos2)
 
-	while y ~= data.h do
-		while z ~= data.w do
-			while x ~= data.l do
+	while x ~= data.l do
+		while y ~= data.h do
+			while z ~= data.w do
 
 				if data.nodenames[data.nodes[i]] then
 					minetest.set_node({x = x + pos.x, y = y + pos.y, z = z + pos.z}, {name = data.nodenames[data.nodes[i]]})
@@ -121,13 +120,13 @@ function superi.load(pos, name)
 
 				end
 
-				x = superi.iterate_to(x, data.l)
+				z = superi.iterate_to(z, data.w)
 			end
-			x = 0
-			z = superi.iterate_to(z, data.w)
+			z = 0
+			y = superi.iterate_to(y, data.h)
 		end
-		z = 0
-		y = superi.iterate_to(y, data.h)
+		y = 0
+		x = superi.iterate_to(x, data.l)
 	end
 end
 
@@ -153,7 +152,7 @@ minetest.register_chatcommand("emerge", {
 
 minetest.register_chatcommand("load", {
 	func = function(name, param)
-		superi.load(uwu, param)
+		superi.load(uwu, superi.saved[param] or minetest.deserialize(io.open(minetest.get_worldpath() .."/schems/" ..param ..".sdx", "r"):read("*a")))
 		minetest.chat_send_all("Loaded " ..param ..".sdx!")
 	end
 })
