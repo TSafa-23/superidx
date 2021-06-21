@@ -1,6 +1,9 @@
-# superiDX (superiNDexer)
-A custom made mod for super efficient custom schematic storage using a table of indexes
+# superiDX
+A custom schematic saving/loading format that focuses on file size and speed
 
-# To do/wishlist
-Schematic loading from disk
-LVM Placement (currently unworking)
+# To do
+LZ Compression for .sdx files
+
+Proper emerging
+
+Setting proper min/maxpos in save function
