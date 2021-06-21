@@ -37,48 +37,42 @@ function superi.rle(nodes)
 end
 
 --------------------------------------------------------------------------------------------------------------
-
-function superi.save(pos1, pos2, name)
+-- pos1 and pos2 *must* be tables of x, y and z coordinates.
+function superi.save(minpos, maxpos, name)
 
 	local nodenames = {}
 	local nodes = {}
 	local tempnode = {}
+	local tempid = ""
 	local is_nodename = false
+	local size = vector.subtract(maxpos, minpos)
+	local c_ids = {}
 
-	local l = pos2.x - pos1.x
-	local w = pos2.z - pos1.z
-	local h = pos2.y - pos1.y
+	local voxelmanip = minetest.get_voxel_manip(minpos, maxpos)
+	local emin, emax = voxelmanip:read_from_map(minpos, maxpos)
+	local voxelarea = VoxelArea:new{MinEdge = emin, MaxEdge = emax}
 
-	local y = 0
-	local x = 0
-	local z = 0
+	local vm_nodes = voxelmanip:get_data()
 
-	while x ~= l do
-		while y ~= h do
-			while z ~= w do
-				tempnode = minetest.get_node({x = pos1.x + x, y = pos1.y + y, z = pos1.z + z})
-				for n = 1, #nodenames do
-					is_nodename = false
-					if tempnode.name == nodenames[n] then
-						table.insert(nodes, n)
-						is_nodename = true
-						break
-					end 
-				end
-				if not is_nodename then
-					table.insert(nodenames, tempnode.name)
-					table.insert(nodes, #nodenames)
-				end
-				z = superi.iterate_to(z, w)
-			end
-			z = 0
-			y = superi.iterate_to(y, h)
+	for loc in voxelarea:iterp(minpos, maxpos) do
+
+		tempnode = vm_nodes[loc]
+		for n = 1, #nodenames do
+			is_nodename = false
+			if tempnode == c_ids[n] then
+				table.insert(nodes, n)
+				is_nodename = true
+				break
+			end 
 		end
-		y = 0
-		x = superi.iterate_to(x, l)
+		if not is_nodename then
+			table.insert(nodenames, minetest.get_name_from_content_id(tempnode))
+			table.insert(c_ids, tempnode)
+			table.insert(nodes, #nodenames)
+		end
 	end
 
-	superi.saved[name] = {l = l, w = w, h = h, nodenames = nodenames, nodes = superi.rle(nodes)}
+	superi.saved[name] = {size = size, nodenames = nodenames, nodes = superi.rle(nodes)}
 
 	minetest.mkdir(minetest.get_worldpath() .."/schems")
 	local file = io.open(minetest.get_worldpath() .."/schems/" ..name ..".sdx", "w+")
@@ -89,52 +83,52 @@ end
 
 -------------------------------------------------------------------------------------------------------------
 
-function superi.load(pos, data)
+function superi.load(minpos, data)
 
 	local i = 1
 	local ti = 1
 	local x = 0
 	local y = 0
 	local z = 0
-	local pos2 = {x = pos.x + data.l, y = pos.y + data.h, z = pos.z + data.w}
+	local maxpos = vector.add(minpos, data.size)
+	local c_ids = {}
 
-	minetest.emerge_area(pos, pos2)
+	local voxelmanip = minetest.get_voxel_manip(minpos, maxpos)
+	local emin, emax = voxelmanip:read_from_map(minpos, maxpos)
+	local voxelarea = VoxelArea:new{MinEdge = emin, MaxEdge = emax}
 
-	while x ~= data.l do
-		while y ~= data.h do
-			while z ~= data.w do
 
-				if data.nodenames[data.nodes[i]] then
-					minetest.set_node({x = x + pos.x, y = y + pos.y, z = z + pos.z}, {name = data.nodenames[data.nodes[i]]})
-					i = i + 1
-				else
+	local vm_nodes = voxelmanip:get_data()
 
-					minetest.set_node({x = x + pos.x, y = y + pos.y, z = z + pos.z}, {name = data.nodenames[data.nodes[i][1]]})
-					if ti < data.nodes[i][2] then
-						ti = ti + 1
-					else
-						i = i + 1
-						ti = 1
-					end
-
-				end
-
-				z = superi.iterate_to(z, data.w)
-			end
-			z = 0
-			y = superi.iterate_to(y, data.h)
-		end
-		y = 0
-		x = superi.iterate_to(x, data.l)
+	for j = 1, #data.nodenames do
+		table.insert(c_ids, minetest.get_content_id(data.nodenames[j]))
 	end
+
+	for loc in voxelarea:iterp(minpos, maxpos) do
+		if data.nodenames[data.nodes[i]] then
+			vm_nodes[loc] = c_ids[data.nodes[i]]
+			i = i + 1
+		else
+			print(data.nodes[i][1])
+			vm_nodes[loc] = c_ids[data.nodes[i][1]]
+			if ti < data.nodes[i][2] then
+				ti = ti + 1
+			else
+				i = i + 1
+				ti = 1
+			end
+		end
+	end
+	voxelmanip:set_data(vm_nodes)
+	voxelmanip:write_to_map(true)
 end
 
 -------------------------------------------------------------------------------------------------------------
 
-local uwu = {x = 0, y = 0, z = 0}
-local owo = {x = -200, y = -200, z = -200}
+local uwu = {x = -200, y = -200, z = -200}
+local owo = {x = 0, y = 0, z = 0}
 
-minetest.register_chatcommand("save", {
+minetest.register_chatcommand("save", { -- Function needs to handle small amount of maths to determine min and max pos
 	func = function(name, param)
 		superi.save(uwu, owo, param)
 		minetest.chat_send_all("Saved as " ..param ..".sdx!")
