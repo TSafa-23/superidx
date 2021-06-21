@@ -2,11 +2,6 @@ superi = {}
 
 superi.saved = {}
 
-function superi.iterate_to(number, constant)
-	if number < constant then return number + 1
-	else return number - 1 end
-end
-
 --------------------------------------------------------------------------------------------------------------
 
 function superi.rle(nodes)
