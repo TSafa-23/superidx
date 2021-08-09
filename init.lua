@@ -1,4 +1,4 @@
--- TO DO: Metadata save/loading
+-- TO DO: Chunk larger areas for memory usage
 
 superi = {}
 
