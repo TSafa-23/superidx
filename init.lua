@@ -18,8 +18,7 @@ end
 
 function superi.rle(nodes)
 	local ti = 1
-	local tstr = ""
-	local kvp = {}
+	local tstr
 
 	local nodes_rle = {}
 
@@ -27,7 +26,7 @@ function superi.rle(nodes)
 		if nodes[i] ~= nodes[i+1] then
 			tstr = "{" ..nodes[i] .."," ..ti .."}"
 			if #tstr > ti then
-				for e = 1, ti do
+				for _ = 1, ti do
 					table.insert(nodes_rle, nodes[i])
 				end
 			else
@@ -46,8 +45,7 @@ function superi.save(minpos, maxpos, name)
 
 	local nodenames = {}
 	local nodes = {}
-	local tempnode = {}
-	local tempid = ""
+	local tempnode
 	local is_nodename = false
 	local size = vector.subtract(maxpos, minpos)
 	local c_ids = {}
@@ -66,7 +64,7 @@ function superi.save(minpos, maxpos, name)
 				table.insert(nodes, n)
 				is_nodename = true
 				break
-			end 
+			end
 		end
 		if not is_nodename then
 			table.insert(nodenames, minetest.get_name_from_content_id(tempnode))
@@ -87,16 +85,12 @@ function superi.load(minpos, data)
 
 	local i = 1
 	local ti = 1
-	local x = 0
-	local y = 0
-	local z = 0
 	local maxpos = vector.add(minpos, data.size)
 	local c_ids = {}
 
 	local voxelmanip = minetest.get_voxel_manip(minpos, maxpos)
 	local emin, emax = voxelmanip:read_from_map(minpos, maxpos)
 	local voxelarea = VoxelArea:new{MinEdge = emin, MaxEdge = emax}
-
 
 	local vm_nodes = voxelmanip:get_data()
 
